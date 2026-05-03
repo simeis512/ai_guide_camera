@@ -1,6 +1,7 @@
 import { useState, useEffect, useRef, useCallback } from 'react';
+import type { AppSettings } from '../types';
 
-export const useCamera = () => {
+export const useCamera = (settings: AppSettings) => {
   const [stream, setStream] = useState<MediaStream | null>(null);
   const [error, setError] = useState<string | null>(null);
   const videoRef = useRef<HTMLVideoElement>(null);
@@ -9,8 +10,19 @@ export const useCamera = () => {
   useEffect(() => {
     const initCamera = async () => {
       try {
+        let videoConstraints: MediaTrackConstraints = { facingMode: 'environment' };
+        
+        if (settings.cameraResolution === '1080p') {
+          videoConstraints = { ...videoConstraints, width: { ideal: 1920 }, height: { ideal: 1080 } };
+        } else if (settings.cameraResolution === '480p') {
+          videoConstraints = { ...videoConstraints, width: { ideal: 640 }, height: { ideal: 480 } };
+        } else {
+          // default 720p
+          videoConstraints = { ...videoConstraints, width: { ideal: 1280 }, height: { ideal: 720 } };
+        }
+
         const mediaStream = await navigator.mediaDevices.getUserMedia({
-          video: { facingMode: 'environment' }, // Prefer back camera
+          video: videoConstraints,
           audio: false,
         });
         setStream(mediaStream);
@@ -31,7 +43,7 @@ export const useCamera = () => {
       }
     };
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, []);
+  }, [settings.cameraResolution]);
 
   const takeSnapshot = useCallback((): string | null => {
     if (!videoRef.current || !canvasRef.current || !stream) {

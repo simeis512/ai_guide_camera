@@ -79,6 +79,18 @@ export const SettingsDrawer: React.FC<SettingsDrawerProps> = ({
       </div>
 
       <div className="form-group">
+        <label>カメラ解像度</label>
+        <select
+          value={settings.cameraResolution || '720p'}
+          onChange={(e) => updateSettings({ cameraResolution: e.target.value as '480p' | '720p' | '1080p' })}
+        >
+          <option value="480p">低画質 (480p)</option>
+          <option value="720p">標準画質 (720p)</option>
+          <option value="1080p">高画質 (1080p)</option>
+        </select>
+      </div>
+
+      <div className="form-group">
         <label>プロバイダ</label>
         <select value={settings.provider} onChange={handleProviderChange}>
           <option value="openai">OpenAI (互換)</option>

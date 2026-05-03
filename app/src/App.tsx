@@ -17,7 +17,7 @@ function App() {
   const [isSettingsOpen, setIsSettingsOpen] = useState(false);
   const [isUiVisible, setIsUiVisible] = useState(true);
 
-  const { videoRef, canvasRef, takeSnapshot, error: cameraError } = useCamera();
+  const { videoRef, canvasRef, takeSnapshot, error: cameraError } = useCamera(settings);
   const {
     loopState,
     isAutoLoop,
