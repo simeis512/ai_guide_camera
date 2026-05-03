@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import { useState, useEffect } from 'react';
 import './App.css';
 import { Settings, EyeOff, Eye } from 'lucide-react';
 import { useCamera } from './hooks/useCamera';

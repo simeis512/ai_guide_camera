@@ -1,5 +1,5 @@
 import { useState, useRef, useCallback } from 'react';
-import type { AppSettings, AIResponse, Turn } from '../types';
+import type { AppSettings, Turn } from '../types';
 import { callLLM } from '../lib/llm-provider';
 import { fetchTTS } from '../lib/tts-provider';
 

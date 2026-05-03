@@ -1,5 +1,5 @@
-import React, { useState } from 'react';
-import { Play, Square, Camera, Send, Brain, RefreshCw } from 'lucide-react';
+import { useState } from 'react';
+import { Play, Square, Send, Brain, RefreshCw } from 'lucide-react';
 
 interface ControlPanelProps {
   isAutoLoop: boolean;
@@ -11,7 +11,7 @@ interface ControlPanelProps {
   toggleReasoning: () => void;
 }
 
-export const ControlPanel: React.FC<ControlPanelProps> = ({
+export const ControlPanel = ({
   isAutoLoop,
   loopState,
   toggleAutoLoop,
@@ -19,13 +19,8 @@ export const ControlPanel: React.FC<ControlPanelProps> = ({
   manualCapture,
   useReasoning,
   toggleReasoning,
-}) => {
+}: ControlPanelProps) => {
   const [interventionText, setInterventionText] = useState('');
-
-  const handleSend = () => {
-    manualCapture(interventionText);
-    setInterventionText('');
-  };
 
   const isBusy = loopState === 'capturing' || loopState === 'thinking' || loopState === 'playing';
 
