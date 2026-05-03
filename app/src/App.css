@@ -37,7 +37,11 @@
   transition: opacity var(--transition-normal);
 }
 
-.ui-layer.hidden {
+.hideable {
+  transition: opacity var(--transition-normal);
+}
+
+.hideable.hidden {
   opacity: 0;
   pointer-events: none !important;
 }

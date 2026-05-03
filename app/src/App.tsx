@@ -64,10 +64,10 @@ function App() {
       </button>
 
       {/* Main UI Layer */}
-      <div className={`ui-layer ${!isUiVisible ? 'hidden' : ''}`}>
+      <div className="ui-layer">
 
         {/* Top Nav (Settings Button) */}
-        <div className="top-nav">
+        <div className={`top-nav hideable ${!isUiVisible ? 'hidden' : ''}`}>
           <button className="glass-button ui-element" onClick={() => setIsSettingsOpen(true)}>
             <Settings size={20} />
           </button>
@@ -77,7 +77,7 @@ function App() {
         <div className="main-content ui-element" style={{ position: 'relative' }}>
 
           {/* Left Control Panel */}
-          <div style={{ position: 'absolute', left: 16, bottom: 16, zIndex: 20 }}>
+          <div className={`hideable ${!isUiVisible ? 'hidden' : ''}`} style={{ position: 'absolute', left: 16, bottom: 16, zIndex: 20 }}>
             <ControlPanel
               isAutoLoop={isAutoLoop}
               loopState={loopState}
