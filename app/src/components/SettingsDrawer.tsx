@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import type { AppSettings, ProviderType } from '../types';
 import { X, RefreshCw } from 'lucide-react';
 import { fetchAvailableModels } from '../lib/llm-provider';
@@ -19,6 +19,18 @@ export const SettingsDrawer: React.FC<SettingsDrawerProps> = ({
   const [availableModels, setAvailableModels] = useState<string[]>([]);
   const [isFetchingModels, setIsFetchingModels] = useState(false);
   const [fetchError, setFetchError] = useState<string | null>(null);
+  const [cameras, setCameras] = useState<MediaDeviceInfo[]>([]);
+
+  useEffect(() => {
+    if (isOpen) {
+      navigator.mediaDevices.enumerateDevices().then(devices => {
+        const videoDevices = devices.filter(d => d.kind === 'videoinput');
+        setCameras(videoDevices);
+      }).catch(err => {
+        console.error("Failed to enumerate devices:", err);
+      });
+    }
+  }, [isOpen]);
 
   const handleProviderChange = (e: React.ChangeEvent<HTMLSelectElement>) => {
     const provider = e.target.value as ProviderType;
@@ -75,6 +87,21 @@ export const SettingsDrawer: React.FC<SettingsDrawerProps> = ({
         >
           <option value="camera">カメラ映像</option>
           <option value="black">真っ黒（AR用）</option>
+        </select>
+      </div>
+
+      <div className="form-group">
+        <label>カメラ選択</label>
+        <select
+          value={settings.cameraId || ''}
+          onChange={(e) => updateSettings({ cameraId: e.target.value })}
+        >
+          <option value="">デフォルト (背面カメラ優先)</option>
+          {cameras.map((cam, idx) => (
+            <option key={cam.deviceId} value={cam.deviceId}>
+              {cam.label || `カメラ ${idx + 1} (${cam.deviceId.slice(0, 5)}...)`}
+            </option>
+          ))}
         </select>
       </div>
 

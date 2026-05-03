@@ -10,7 +10,13 @@ export const useCamera = (settings: AppSettings) => {
   useEffect(() => {
     const initCamera = async () => {
       try {
-        let videoConstraints: MediaTrackConstraints = { facingMode: 'environment' };
+        let videoConstraints: MediaTrackConstraints = {};
+        
+        if (settings.cameraId) {
+          videoConstraints.deviceId = { exact: settings.cameraId };
+        } else {
+          videoConstraints.facingMode = 'environment';
+        }
         
         if (settings.cameraResolution === '1080p') {
           videoConstraints = { ...videoConstraints, width: { ideal: 1920 }, height: { ideal: 1080 } };
@@ -43,7 +49,7 @@ export const useCamera = (settings: AppSettings) => {
       }
     };
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [settings.cameraResolution]);
+  }, [settings.cameraResolution, settings.cameraId]);
 
   const takeSnapshot = useCallback((): string | null => {
     if (!videoRef.current || !canvasRef.current || !stream) {

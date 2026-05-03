@@ -12,6 +12,7 @@ export interface AppSettings {
   ttsSpeakerId: string;
   useReasoning?: boolean;
   cameraResolution?: '480p' | '720p' | '1080p';
+  cameraId?: string;
 }
 
 export const SYSTEM_LEVEL_PROMPT = `あなたはユーザーのカメラ（またはスマートグラス）を通じて現実世界を共に探索する「AIコンパニオン」です。
@@ -44,6 +45,7 @@ export const DEFAULT_SETTINGS: AppSettings = {
   ttsSpeakerId: '3',
   useReasoning: true,
   cameraResolution: '720p',
+  cameraId: '',
 };
 
 export interface AIResponse {
