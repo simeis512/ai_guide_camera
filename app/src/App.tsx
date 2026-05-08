@@ -6,6 +6,7 @@ import { useAILoop } from './hooks/useAILoop';
 import { SettingsDrawer } from './components/SettingsDrawer';
 import { AIOverlay } from './components/AIOverlay';
 import { ControlPanel } from './components/ControlPanel';
+import { FaceMosaicModal } from './components/FaceMosaicModal';
 import { type AppSettings, DEFAULT_SETTINGS } from './types';
 
 function App() {
@@ -16,8 +17,13 @@ function App() {
 
   const [isSettingsOpen, setIsSettingsOpen] = useState(false);
   const [isUiVisible, setIsUiVisible] = useState(true);
+  const [showFaceMosaicModal, setShowFaceMosaicModal] = useState(() => {
+    const saved = localStorage.getItem('ai_guide_settings');
+    const parsed = saved ? JSON.parse(saved) : DEFAULT_SETTINGS;
+    return !parsed.hasAcknowledgedFaceMosaic;
+  });
 
-  const { videoRef, canvasRef, takeSnapshot, error: cameraError } = useCamera(settings);
+  const { videoRef, canvasRef, overlayCanvasRef, takeSnapshot, error: cameraError } = useCamera(settings, isSettingsOpen);
   const {
     loopState,
     isAutoLoop,
@@ -50,6 +56,11 @@ function App() {
           muted
           className="camera-video"
           style={{ opacity: isBlackBg ? 0 : 1 }}
+        />
+        <canvas 
+          ref={overlayCanvasRef} 
+          className="camera-video" 
+          style={{ position: 'absolute', top: 0, left: 0, pointerEvents: 'none', opacity: isBlackBg ? 0 : 1 }} 
         />
         <canvas ref={canvasRef} style={{ display: 'none' }} />
       </div>
@@ -104,6 +115,19 @@ function App() {
         onClose={() => setIsSettingsOpen(false)}
         settings={settings}
         updateSettings={updateSettings}
+        onRequireFaceMosaicModal={() => setShowFaceMosaicModal(true)}
+      />
+
+      {/* Modals */}
+      <FaceMosaicModal 
+        isOpen={showFaceMosaicModal}
+        onAccept={() => {
+          updateSettings({ enableFaceMosaic: true, hasAcknowledgedFaceMosaic: true });
+          setShowFaceMosaicModal(false);
+        }}
+        onDecline={() => {
+          setShowFaceMosaicModal(false);
+        }}
       />
     </div>
   );

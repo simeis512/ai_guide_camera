@@ -13,6 +13,8 @@ export interface AppSettings {
   useReasoning?: boolean;
   cameraResolution?: '480p' | '720p' | '1080p';
   cameraId?: string;
+  enableFaceMosaic?: boolean;
+  hasAcknowledgedFaceMosaic?: boolean;
 }
 
 export const SYSTEM_LEVEL_PROMPT = `あなたはユーザーのカメラ（またはスマートグラス）を通じて現実世界を共に探索する「AIコンパニオン」です。
@@ -46,6 +48,8 @@ export const DEFAULT_SETTINGS: AppSettings = {
   useReasoning: true,
   cameraResolution: '720p',
   cameraId: '',
+  enableFaceMosaic: false,
+  hasAcknowledgedFaceMosaic: false,
 };
 
 export interface AIResponse {

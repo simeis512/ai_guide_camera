@@ -1,11 +1,15 @@
 import { useState, useEffect, useRef, useCallback } from 'react';
 import type { AppSettings } from '../types';
+import { useFaceDetector } from './useFaceDetector';
 
-export const useCamera = (settings: AppSettings) => {
+export const useCamera = (settings: AppSettings, isSettingsOpen: boolean = false) => {
   const [stream, setStream] = useState<MediaStream | null>(null);
   const [error, setError] = useState<string | null>(null);
   const videoRef = useRef<HTMLVideoElement>(null);
   const canvasRef = useRef<HTMLCanvasElement>(null);
+  const overlayCanvasRef = useRef<HTMLCanvasElement>(null);
+
+  const { isReady, detectFaces } = useFaceDetector();
 
   useEffect(() => {
     const initCamera = async () => {
@@ -51,7 +55,66 @@ export const useCamera = (settings: AppSettings) => {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [settings.cameraResolution, settings.cameraId]);
 
-  const takeSnapshot = useCallback((): string | null => {
+  // Preview overlay drawing loop
+  useEffect(() => {
+    let animationFrameId: number;
+
+    const drawOverlay = () => {
+      if (!isSettingsOpen || !videoRef.current || !overlayCanvasRef.current || !isReady) {
+        if (overlayCanvasRef.current) {
+          const ctx = overlayCanvasRef.current.getContext('2d');
+          ctx?.clearRect(0, 0, overlayCanvasRef.current.width, overlayCanvasRef.current.height);
+        }
+        return;
+      }
+
+      const video = videoRef.current;
+      const canvas = overlayCanvasRef.current;
+      
+      if (video.videoWidth > 0 && video.videoHeight > 0) {
+        canvas.width = video.videoWidth;
+        canvas.height = video.videoHeight;
+        const ctx = canvas.getContext('2d');
+        if (ctx) {
+          ctx.clearRect(0, 0, canvas.width, canvas.height);
+          
+          if (settings.enableFaceMosaic) {
+            const faces = detectFaces(video);
+            ctx.strokeStyle = '#00e5ff';
+            ctx.lineWidth = 4;
+            ctx.fillStyle = 'rgba(0, 229, 255, 0.2)';
+            
+            faces.forEach(face => {
+              const box = face.boundingBox;
+              if (box) {
+                ctx.beginPath();
+                ctx.rect(box.originX, box.originY, box.width, box.height);
+                ctx.fill();
+                ctx.stroke();
+              }
+            });
+          }
+        }
+      }
+      
+      animationFrameId = requestAnimationFrame(drawOverlay);
+    };
+
+    if (isSettingsOpen) {
+      drawOverlay();
+    } else {
+      if (overlayCanvasRef.current) {
+        const ctx = overlayCanvasRef.current.getContext('2d');
+        ctx?.clearRect(0, 0, overlayCanvasRef.current.width, overlayCanvasRef.current.height);
+      }
+    }
+
+    return () => {
+      if (animationFrameId) cancelAnimationFrame(animationFrameId);
+    };
+  }, [isSettingsOpen, isReady, detectFaces, settings.enableFaceMosaic]);
+
+  const takeSnapshot = useCallback(async (): Promise<string | null> => {
     if (!videoRef.current || !canvasRef.current || !stream) {
       return null;
     }
@@ -59,19 +122,38 @@ export const useCamera = (settings: AppSettings) => {
     const video = videoRef.current;
     const canvas = canvasRef.current;
 
-    // Set canvas dimensions to match video
     canvas.width = video.videoWidth;
     canvas.height = video.videoHeight;
 
     const ctx = canvas.getContext('2d');
     if (!ctx) return null;
 
-    // Draw the current video frame onto the canvas
     ctx.drawImage(video, 0, 0, canvas.width, canvas.height);
 
-    // Get base64 string
-    return canvas.toDataURL('image/jpeg', 0.8);
-  }, [stream]);
+    if (settings.enableFaceMosaic && isReady) {
+      const faces = detectFaces(canvas);
+      if (faces.length > 0) {
+        faces.forEach(face => {
+          const box = face.boundingBox;
+          if (box) {
+            // Calculate blur size dynamically based on bounding box width
+            const blurSize = Math.max(5, Math.floor(box.width * 0.1));
+            ctx.filter = `blur(${blurSize}px)`;
+            
+            // Draw only the face region again with blur
+            ctx.drawImage(
+              canvas, 
+              box.originX, box.originY, box.width, box.height, // source slice
+              box.originX, box.originY, box.width, box.height  // dest slice
+            );
+          }
+        });
+        ctx.filter = 'none'; // reset filter
+      }
+    }
 
-  return { stream, error, videoRef, canvasRef, takeSnapshot };
+    return canvas.toDataURL('image/jpeg', 0.8);
+  }, [stream, settings.enableFaceMosaic, isReady, detectFaces]);
+
+  return { stream, error, videoRef, canvasRef, overlayCanvasRef, takeSnapshot };
 };

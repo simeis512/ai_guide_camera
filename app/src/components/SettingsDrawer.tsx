@@ -8,6 +8,7 @@ interface SettingsDrawerProps {
   onClose: () => void;
   settings: AppSettings;
   updateSettings: (newSettings: Partial<AppSettings>) => void;
+  onRequireFaceMosaicModal: () => void;
 }
 
 export const SettingsDrawer: React.FC<SettingsDrawerProps> = ({
@@ -15,6 +16,7 @@ export const SettingsDrawer: React.FC<SettingsDrawerProps> = ({
   onClose,
   settings,
   updateSettings,
+  onRequireFaceMosaicModal,
 }) => {
   const [availableModels, setAvailableModels] = useState<string[]>([]);
   const [isFetchingModels, setIsFetchingModels] = useState(false);
@@ -88,6 +90,27 @@ export const SettingsDrawer: React.FC<SettingsDrawerProps> = ({
           <option value="camera">カメラ映像</option>
           <option value="black">真っ黒（AR用）</option>
         </select>
+      </div>
+
+      <div className="form-group" style={{ marginTop: '8px', padding: '12px', background: 'rgba(255,255,255,0.05)', borderRadius: '8px' }}>
+        <label style={{ display: 'flex', alignItems: 'center', gap: '8px', cursor: 'pointer', margin: 0, fontSize: '14px', color: '#fff' }}>
+          <input 
+            type="checkbox" 
+            checked={settings.enableFaceMosaic || false}
+            onChange={(e) => {
+              if (e.target.checked && !settings.hasAcknowledgedFaceMosaic) {
+                onRequireFaceMosaicModal();
+              } else {
+                updateSettings({ enableFaceMosaic: e.target.checked });
+              }
+            }}
+            style={{ accentColor: '#00e5ff', width: '18px', height: '18px' }}
+          />
+          顔へのモザイク処理 (ローカル)
+        </label>
+        <div style={{ fontSize: '11px', color: '#aaa', marginTop: '4px', marginLeft: '26px' }}>
+          カメラ画像から顔を検出し、AIに送信する前にモザイクをかけます。
+        </div>
       </div>
 
       <div className="form-group">

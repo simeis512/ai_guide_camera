@@ -7,7 +7,7 @@ type LoopState = 'idle' | 'capturing' | 'thinking' | 'playing' | 'paused_for_hel
 
 export const useAILoop = (
   settings: AppSettings,
-  takeSnapshot: () => string | null
+  takeSnapshot: () => Promise<string | null> | string | null
 ) => {
   const [loopState, setLoopState] = useState<LoopState>('idle');
   const [isAutoLoop, setIsAutoLoop] = useState<boolean>(false);
@@ -60,7 +60,7 @@ export const useAILoop = (
     setError(null);
     
     try {
-      const base64Image = takeSnapshot();
+      const base64Image = await takeSnapshot();
       if (!base64Image) {
         throw new Error('Failed to take snapshot');
       }
