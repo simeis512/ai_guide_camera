@@ -60,7 +60,7 @@ export const useCamera = (settings: AppSettings, isSettingsOpen: boolean = false
     let animationFrameId: number;
 
     const drawOverlay = () => {
-      if (!isSettingsOpen || !videoRef.current || !overlayCanvasRef.current || !isReady) {
+      if ((!isSettingsOpen && !settings.enableFaceMosaic) || !videoRef.current || !overlayCanvasRef.current || !isReady) {
         if (overlayCanvasRef.current) {
           const ctx = overlayCanvasRef.current.getContext('2d');
           ctx?.clearRect(0, 0, overlayCanvasRef.current.width, overlayCanvasRef.current.height);
@@ -78,19 +78,34 @@ export const useCamera = (settings: AppSettings, isSettingsOpen: boolean = false
         if (ctx) {
           ctx.clearRect(0, 0, canvas.width, canvas.height);
           
-          if (settings.enableFaceMosaic) {
+          if (settings.enableFaceMosaic || isSettingsOpen) {
             const faces = detectFaces(video);
-            ctx.strokeStyle = '#00e5ff';
-            ctx.lineWidth = 4;
-            ctx.fillStyle = 'rgba(0, 229, 255, 0.2)';
             
             faces.forEach(face => {
               const box = face.boundingBox;
               if (box) {
-                ctx.beginPath();
-                ctx.rect(box.originX, box.originY, box.width, box.height);
-                ctx.fill();
-                ctx.stroke();
+                // 背景カメラへのリアルタイムモザイク処理
+                if (settings.enableFaceMosaic) {
+                  const blurSize = Math.max(5, Math.floor(box.width * 0.1));
+                  ctx.filter = `blur(${blurSize}px)`;
+                  ctx.drawImage(
+                    video,
+                    box.originX, box.originY, box.width, box.height,
+                    box.originX, box.originY, box.width, box.height
+                  );
+                  ctx.filter = 'none';
+                }
+
+                // 設定画面表示中のデバッグ用バウンディングボックス
+                if (isSettingsOpen) {
+                  ctx.strokeStyle = '#00e5ff';
+                  ctx.lineWidth = 4;
+                  ctx.fillStyle = 'rgba(0, 229, 255, 0.2)';
+                  ctx.beginPath();
+                  ctx.rect(box.originX, box.originY, box.width, box.height);
+                  ctx.fill();
+                  ctx.stroke();
+                }
               }
             });
           }
@@ -100,7 +115,7 @@ export const useCamera = (settings: AppSettings, isSettingsOpen: boolean = false
       animationFrameId = requestAnimationFrame(drawOverlay);
     };
 
-    if (isSettingsOpen) {
+    if (isSettingsOpen || settings.enableFaceMosaic) {
       drawOverlay();
     } else {
       if (overlayCanvasRef.current) {
